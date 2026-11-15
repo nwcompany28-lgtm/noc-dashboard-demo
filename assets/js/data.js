@@ -70,19 +70,58 @@
     return list;
   }
 
+  /*
+    Alarm object shape:
+    { id, sev: 'critical'|'major'|'minor', device, msg, t (raised, ms),
+      status: 'active'|'acked'|'resolved', ackBy, resolvedAt,
+      notes: [{ t, by, text }], events: [{ t, text }] }
+  */
   function makeAlarms(devices) {
     const now = Date.now();
+    const M = 60e3, H = 60 * M;
     const down = devices.filter(d => d.status === 'down');
     const warn = devices.filter(d => d.status === 'warning');
-    return [
-      { id: 1, sev: 'critical', device: down[0].name, msg: 'Device unreachable (ICMP timeout)', t: now - 4 * 60e3 },
-      { id: 2, sev: 'critical', device: down[1].name, msg: 'Interface Gi0/1 link down', t: now - 11 * 60e3 },
-      { id: 3, sev: 'major', device: warn[2].name, msg: 'High latency > 200 ms', t: now - 17 * 60e3 },
-      { id: 4, sev: 'major', device: warn[0].name, msg: 'Packet loss above 3%', t: now - 26 * 60e3 },
-      { id: 5, sev: 'minor', device: warn[1].name, msg: 'CPU utilisation 85%', t: now - 42 * 60e3 },
-      { id: 6, sev: 'minor', device: 'hq-fw-01', msg: 'Config changed by admin', t: now - 68 * 60e3 },
-    ].map(a => ({ ...a, acked: false }));
+    const raw = [
+      // Active
+      { sev: 'critical', device: down[0].name, msg: 'Device unreachable (ICMP timeout)', t: now - 4 * M },
+      { sev: 'critical', device: down[1].name, msg: 'Interface Gi0/1 link down', t: now - 11 * M },
+      { sev: 'major', device: warn[2].name, msg: 'High latency > 200 ms', t: now - 17 * M },
+      { sev: 'major', device: warn[0].name, msg: 'Packet loss above 3%', t: now - 26 * M },
+      { sev: 'minor', device: warn[1].name, msg: 'CPU utilisation 85%', t: now - 42 * M },
+      { sev: 'minor', device: 'hq-fw-01', msg: 'Config changed by admin', t: now - 68 * M },
+      // Acknowledged
+      { sev: 'major', device: 'datacenter-sw-03', msg: 'Power supply 2 failure', t: now - 2.5 * H, status: 'acked', ackBy: 'r.santos', ackAfter: 9 * M },
+      { sev: 'minor', device: 'branch-a-ap-05', msg: 'Client count above threshold (85)', t: now - 3.2 * H, status: 'acked', ackBy: 'admin', ackAfter: 21 * M },
+      // Resolved
+      { sev: 'critical', device: 'hq-rtr-02', msg: 'BGP session to ISP-1 down', t: now - 5 * H, status: 'resolved', ackBy: 'admin', ackAfter: 3 * M, resolveAfter: 38 * M },
+      { sev: 'major', device: 'branch-b-sw-06', msg: 'Spanning-tree topology change', t: now - 7.5 * H, status: 'resolved', ackBy: 'r.santos', ackAfter: 12 * M, resolveAfter: 25 * M },
+      { sev: 'minor', device: 'datacenter-fw-02', msg: 'SSL certificate expires in 14 days', t: now - 20 * H, status: 'resolved', ackBy: 'admin', ackAfter: 2 * H, resolveAfter: 3 * H },
+      { sev: 'major', device: 'hq-sw-12', msg: 'Interface Te1/0/1 CRC errors rising', t: now - 26 * H, status: 'resolved', ackBy: 'admin', ackAfter: 15 * M, resolveAfter: 50 * M },
+    ];
+    return raw.map((a, i) => {
+      const status = a.status || 'active';
+      const events = [{ t: a.t, text: `Alarm raised: ${a.msg}` }];
+      if (status !== 'active') events.push({ t: a.t + a.ackAfter, text: `Acknowledged by ${a.ackBy}` });
+      if (status === 'resolved') events.push({ t: a.t + a.resolveAfter, text: 'Condition cleared — alarm resolved' });
+      const notes = status !== 'active'
+        ? [{ t: a.t + a.ackAfter + 60e3, by: a.ackBy, text: 'Checking with on-site team.' }]
+        : [];
+      return {
+        id: i + 1, sev: a.sev, device: a.device, msg: a.msg, t: a.t, status,
+        ackBy: status !== 'active' ? a.ackBy : null,
+        resolvedAt: status === 'resolved' ? a.t + a.resolveAfter : null,
+        notes, events,
+      };
+    });
   }
+
+  const NEW_ALARM_POOL = [
+    { sev: 'major', msg: 'High latency > 150 ms' },
+    { sev: 'minor', msg: 'Memory utilisation 82%' },
+    { sev: 'critical', msg: 'Interface uplink down' },
+    { sev: 'minor', msg: 'Fan speed above normal' },
+    { sev: 'major', msg: 'Packet loss above 2%' },
+  ];
 
   // Traffic: 60 points, one every 2 s (= 2 minutes of history)
   const POINTS = 60;
@@ -110,6 +149,56 @@
       });
     },
 
+    /* ---------- Alarm actions (replace with POST requests to your API) ---------- */
+    CURRENT_USER: 'admin',
+    findAlarm(id) { return this.alarms.find(a => a.id === id); },
+    activeAlarms() { return this.alarms.filter(a => a.status === 'active'); },
+
+    ackAlarm(id) {
+      const a = this.findAlarm(id);
+      if (!a || a.status !== 'active') return false;
+      a.status = 'acked'; a.ackBy = this.CURRENT_USER;
+      a.events.push({ t: Date.now(), text: `Acknowledged by ${this.CURRENT_USER}` });
+      this.save();
+      return true;
+    },
+    resolveAlarm(id) {
+      const a = this.findAlarm(id);
+      if (!a || a.status === 'resolved') return false;
+      if (a.status === 'active') { a.ackBy = this.CURRENT_USER; a.events.push({ t: Date.now(), text: `Acknowledged by ${this.CURRENT_USER}` }); }
+      a.status = 'resolved'; a.resolvedAt = Date.now();
+      a.events.push({ t: Date.now(), text: `Resolved manually by ${this.CURRENT_USER}` });
+      this.save();
+      return true;
+    },
+    addNote(id, text) {
+      const a = this.findAlarm(id);
+      if (!a || !text.trim()) return false;
+      const note = { t: Date.now(), by: this.CURRENT_USER, text: text.trim() };
+      a.notes.push(note);
+      a.events.push({ t: note.t, text: `Note added by ${note.by}` });
+      this.save();
+      return true;
+    },
+
+    /** Demo only: raise a random new alarm on a random online device. */
+    simulateAlarm() {
+      const online = this.devices.filter(d => d.status !== 'down');
+      const dev = online[Math.floor(Math.random() * online.length)];
+      const tpl = NEW_ALARM_POOL[Math.floor(Math.random() * NEW_ALARM_POOL.length)];
+      const a = {
+        id: Math.max(0, ...this.alarms.map(x => x.id)) + 1,
+        sev: tpl.sev, device: dev.name, msg: tpl.msg, t: Date.now(),
+        status: 'active', ackBy: null, resolvedAt: null, notes: [],
+        events: [{ t: Date.now(), text: `Alarm raised: ${tpl.msg}` }],
+      };
+      this.alarms.unshift(a);
+      this.save();
+      return a;
+    },
+
+    deviceByName(name) { return this.devices.find(d => d.name === name); },
+
     /** Simulated live traffic sample (replace with your interface counters). */
     tickTraffic() {
       this.trafficIn.push(nextTraffic(this.trafficIn[POINTS - 1], 430, 40));
@@ -119,6 +208,16 @@
   };
 
   NOC.alarms = makeAlarms(NOC.devices);
+
+  // Demo convenience: keep alarm changes while moving between pages (this browser tab only).
+  // Remove this block when alarms come from a real API.
+  NOC.save = function () {
+    try { sessionStorage.setItem('sb-alarms', JSON.stringify(this.alarms)); } catch (e) { /* ignore */ }
+  };
+  try {
+    const saved = JSON.parse(sessionStorage.getItem('sb-alarms') || 'null');
+    if (Array.isArray(saved) && saved.length) NOC.alarms = saved;
+  } catch (e) { /* ignore */ }
   (function seedTraffic() {
     let a = 420, b = 180;
     for (let i = 0; i < POINTS; i++) {

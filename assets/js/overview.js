@@ -14,7 +14,7 @@
     const down = d.filter(x => x.status === 'down').length;
     const online = d.filter(x => x.latency !== null);
     const avg = online.reduce((s, x) => s + x.latency, 0) / online.length;
-    const active = NOC.alarms.filter(a => !a.acked);
+    const active = NOC.activeAlarms();
 
     $('kpiTotal').textContent = d.length;
     $('kpiSites').textContent = `across ${NOC.SITES.length} sites`;
@@ -126,23 +126,27 @@
 
   /* ---------- Alarms ---------- */
   function renderAlarms() {
-    $('alarmList').innerHTML = NOC.alarms.map(a => `
-      <li class="alarm ${a.acked ? 'acked' : ''}">
+    // Show the 6 most recent alarms that are not yet resolved
+    const list = NOC.alarms.filter(a => a.status !== 'resolved').sort((a, b) => b.t - a.t).slice(0, 6);
+    $('alarmList').innerHTML = list.map(a => {
+      const acked = a.status === 'acked';
+      return `
+      <li class="alarm ${acked ? 'acked' : ''}">
         <span class="sev ${a.sev}">${a.sev}</span>
         <div>
           <div class="msg">${a.msg}</div>
           <div class="meta"><span class="mono">${a.device}</span> · ${timeAgo(a.t)}</div>
         </div>
-        <button class="btn" data-ack="${a.id}" ${a.acked ? 'disabled' : ''}>${a.acked ? 'Acked' : 'Ack'}</button>
-      </li>`).join('');
-    $('alarmHint').textContent = `${NOC.alarms.filter(a => !a.acked).length} unacknowledged`;
+        <button class="btn" data-ack="${a.id}" ${acked ? 'disabled' : ''}>${acked ? 'Acked' : 'Ack'}</button>
+      </li>`;
+    }).join('');
+    $('alarmHint').innerHTML = `${NOC.activeAlarms().length} unacknowledged · <a href="alarms.html" style="color:var(--accent);text-decoration:none">View all</a>`;
   }
 
   $('alarmList').addEventListener('click', e => {
     const id = e.target.getAttribute('data-ack');
     if (!id) return;
-    const a = NOC.alarms.find(x => x.id === Number(id));
-    if (a) { a.acked = true; renderAlarms(); renderKPIs(); }
+    if (NOC.ackAlarm(Number(id))) { renderAlarms(); renderKPIs(); }
   });
 
   /* ---------- Latency table ---------- */

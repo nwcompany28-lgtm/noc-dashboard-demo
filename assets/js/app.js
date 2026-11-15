@@ -36,7 +36,7 @@ const App = (function () {
 
   function updateNavCount() {
     const el = $('navAlarmCount');
-    if (el && window.NOC) el.textContent = NOC.alarms.filter(a => !a.acked).length;
+    if (el && window.NOC) el.textContent = NOC.activeAlarms().length;
   }
 
   let toastTimer;
