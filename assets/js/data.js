@@ -199,6 +199,27 @@
 
     deviceByName(name) { return this.devices.find(d => d.name === name); },
 
+    /*
+      Topology links. Replace with data from LLDP/CDP or your CMDB.
+      Link shape: { id, a, b, capacity (Mbps), util (0–1) }
+      'internet' is a virtual node (not a device).
+    */
+    buildTopology() {
+      const rng = mulberry32(99);
+      const links = [];
+      let id = 1;
+      const L = (a, b, capacity) => links.push({ id: id++, a, b, capacity, util: 0.05 + rng() * 0.65 });
+      const by = (site, type) => this.devices.filter(d => d.site === site && d.type === type);
+      SITES.forEach(site => {
+        const fw = by(site, 'firewall'), rt = by(site, 'router'), sw = by(site, 'switch'), ap = by(site, 'ap');
+        fw.forEach(f => L('internet', f.name, 1000));
+        rt.forEach(r => fw.forEach(f => L(f.name, r.name, 10000)));
+        sw.forEach((s, i) => L(rt[i % rt.length].name, s.name, 10000));
+        ap.forEach((a, i) => L(sw[i % sw.length].name, a.name, 1000));
+      });
+      return links;
+    },
+
     /** Simulated live traffic sample (replace with your interface counters). */
     tickTraffic() {
       this.trafficIn.push(nextTraffic(this.trafficIn[POINTS - 1], 430, 40));

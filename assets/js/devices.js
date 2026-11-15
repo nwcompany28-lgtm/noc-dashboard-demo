@@ -276,7 +276,15 @@
   /* ---------- Init + live loop ---------- */
   App.start({ onTheme: () => { if (view.selectedId !== null) renderDrawer(); } });
   initSelects();
+
+  // Support deep links such as devices.html?q=hq-sw-12 (used by the Topology page)
+  const q0 = new URLSearchParams(location.search).get('q');
+  if (q0) { view.q = q0; $('q').value = q0; }
   renderAll();
+  if (q0) {
+    const exact = NOC.devices.find(d => d.name === q0);
+    if (exact) openDrawer(exact.id);
+  }
 
   setInterval(() => {
     NOC.tickLatency();

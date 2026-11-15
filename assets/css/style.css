@@ -361,3 +361,57 @@ td.num, th.num { text-align: right; }
 .show-sm { display: none; }
 @media (max-width: 860px) { .show-sm { display: block; } .alarm-table .msg { min-width: 0; } .alarm-table td, .alarm-table th { padding-left: 10px; padding-right: 10px; } }
 .textarea { width: 100%; resize: vertical; min-height: 64px; font-family: inherit; }
+
+/* ---------- Topology page ---------- */
+.zoom { display: flex; gap: 6px; }
+.zoom .icon-btn { font-size: 18px; font-weight: 600; line-height: 1; }
+.topo-legend { flex-wrap: wrap; }
+.topo-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg-node { width: 12px; height: 12px; border-radius: 4px; border: 2px solid var(--ok); background: var(--panel-2); display: inline-block; }
+.lg-node.warning { border-color: var(--warn); }
+.lg-node.down { border-color: var(--crit); }
+.lg-line { width: 18px; height: 3px; background: var(--muted); display: inline-block; border-radius: 2px; }
+.lg-line.thin { height: 1.5px; }
+
+.topo-wrap { position: relative; height: 620px; overflow: hidden; border-top: 1px solid var(--border); }
+.topo { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; user-select: none; }
+.topo.panning { cursor: grabbing; }
+.topo-hint { position: absolute; left: 12px; bottom: 10px; font-size: 11px; color: var(--muted); background: var(--panel); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); pointer-events: none; }
+
+.topo .site-box { fill: color-mix(in srgb, var(--panel-2) 60%, transparent); stroke: var(--border); stroke-dasharray: 4 4; }
+.topo .site-label { fill: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+
+.topo .link { stroke: var(--muted); stroke-opacity: .45; fill: none; cursor: pointer; transition: stroke-opacity .15s; }
+.topo .link.warning { stroke: var(--warn); stroke-opacity: .85; }
+.topo .link.down { stroke: var(--crit); stroke-opacity: .9; stroke-dasharray: 5 5; }
+.topo .link-hit { stroke: transparent; stroke-width: 12; fill: none; cursor: pointer; }
+.topo .link-hit:hover + .link, .topo .link.hl { stroke: var(--accent); stroke-opacity: 1; }
+.topo .flow { fill: none; stroke: var(--in); stroke-width: 2; stroke-dasharray: 2 14; stroke-linecap: round; pointer-events: none; animation: flow linear infinite; }
+.topo.no-flow .flow { display: none; }
+@keyframes flow { to { stroke-dashoffset: -32; } }
+
+.topo .node { cursor: pointer; }
+.topo .node rect.box { fill: var(--panel); stroke-width: 2; transition: stroke-width .15s; }
+.topo .node.up rect.box { stroke: var(--ok); }
+.topo .node.warning rect.box { stroke: var(--warn); }
+.topo .node.down rect.box { stroke: var(--crit); }
+.topo .node.cloud rect.box { stroke: var(--accent); }
+.topo .node:hover rect.box, .topo .node.sel rect.box { stroke-width: 3.5; }
+.topo .node .glyph { fill: var(--text); font-size: 10px; font-weight: 700; font-family: ui-monospace, Menlo, Consolas, monospace; }
+.topo .node .lbl { fill: var(--muted); font-size: 10px; font-family: ui-monospace, Menlo, Consolas, monospace; }
+.topo.no-labels .lbl { display: none; }
+.topo .node.down .pulse { fill: none; stroke: var(--crit); stroke-width: 2; animation: ring 1.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes ring { 0% { opacity: .8; transform: scale(1); } 100% { opacity: 0; transform: scale(1.6); } }
+
+.topo .dim { opacity: .15; }
+
+.nb-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.nb-list li { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); cursor: pointer; }
+.nb-list li:hover { border-color: var(--accent); }
+.nb-list .u { margin-left: auto; font-size: 12px; color: var(--muted); }
+
+@media (max-width: 860px) {
+  .topo-wrap { height: 460px; }
+  .topo-legend { display: none; }
+  .topo-hint { display: none; }
+}

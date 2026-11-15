@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topology — Signalboard NOC Dashboard</title>
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("sb-theme")||"dark")}catch(e){}</script>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ========== SIDEBAR ========== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 12 7 12 10 5 14 19 17 12 21 12"/></svg>
+      </div>
+      Signalboard
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Monitor</div>
+      <a href="index.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        Overview
+      </a>
+      <a href="devices.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="6" rx="1"/><rect x="2" y="14" width="20" height="6" rx="1"/><line x1="6" y1="7" x2="6.01" y2="7"/><line x1="6" y1="17" x2="6.01" y2="17"/></svg>
+        Devices
+      </a>
+      <a href="alarms.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Alarms <span class="count" id="navAlarmCount">0</span>
+      </a>
+      <a href="topology.html" class="active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><line x1="12" y1="7.5" x2="5" y2="16.5"/><line x1="12" y1="7.5" x2="19" y2="16.5"/></svg>
+        Topology
+      </a>
+    </nav>
+
+    <nav class="nav">
+      <div class="nav-label">System</div>
+      <a href="#">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+        Reports
+      </a>
+      <a href="#">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        Settings
+      </a>
+    </nav>
+
+    <div class="sidebar-foot">v1.0 · Demo data</div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ========== MAIN ========== -->
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div>
+        <h1>Topology</h1>
+        <div class="sub" id="pageSub">Physical links between devices</div>
+      </div>
+      <div class="topbar-right">
+        <span class="live"><span class="dot"></span><span class="live-text">Live</span> <span class="mono" id="clock">--:--:--</span></span>
+        <button class="icon-btn" id="themeBtn" aria-label="Toggle theme">
+          <svg id="themeIcon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+        </button>
+      </div>
+    </header>
+
+
+    <main class="content">
+
+      <!-- Link KPIs -->
+      <section class="kpis">
+        <div class="card kpi"><div class="label">Links</div><div class="value mono" id="kLinks">0</div><div class="delta" id="kNodes">0 nodes</div></div>
+        <div class="card kpi crit"><div class="label"><span class="dot down"></span> Links down</div><div class="value mono" id="kDown">0</div><div class="delta">to unreachable devices</div></div>
+        <div class="card kpi warn"><div class="label"><span class="dot warning"></span> Degraded links</div><div class="value mono" id="kWarn">0</div><div class="delta">high latency or loss</div></div>
+        <div class="card kpi"><div class="label">Avg utilisation</div><div class="value mono" id="kUtil">0<small>%</small></div><div class="delta">all active links</div></div>
+        <div class="card kpi"><div class="label">Busiest link</div><div class="value mono" id="kBusy" style="font-size:20px">—</div><div class="delta mono" id="kBusyName">—</div></div>
+      </section>
+
+      <section class="card topo-card">
+        <div class="toolbar">
+          <div class="filters">
+            <select class="select" id="fSite" aria-label="Focus site"><option value="all">All sites</option></select>
+          </div>
+          <label class="toggle"><input type="checkbox" id="tLabels" checked><span>Labels</span></label>
+          <label class="toggle"><input type="checkbox" id="tFlow" checked><span>Traffic flow</span></label>
+          <div class="spacer"></div>
+          <div class="legend topo-legend">
+            <span><i class="lg-node up"></i>Online</span>
+            <span><i class="lg-node warning"></i>Degraded</span>
+            <span><i class="lg-node down"></i>Down</span>
+            <span><i class="lg-line"></i>10 Gbps</span>
+            <span><i class="lg-line thin"></i>1 Gbps</span>
+          </div>
+          <div class="zoom">
+            <button class="icon-btn" id="zIn" aria-label="Zoom in">+</button>
+            <button class="icon-btn" id="zOut" aria-label="Zoom out">−</button>
+            <button class="icon-btn" id="zFit" aria-label="Fit to screen" title="Fit">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 9 4 4 9 4"/><polyline points="20 9 20 4 15 4"/><polyline points="4 15 4 20 9 20"/><polyline points="20 15 20 20 15 20"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="topo-wrap">
+          <svg id="topo" class="topo" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Network topology diagram">
+            <g id="viewport"></g>
+          </svg>
+          <div class="topo-hint">Drag to pan · scroll or use + / − to zoom · click a device or link for details</div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- Detail drawer (device or link) -->
+<div class="scrim drawer-scrim" id="drawerScrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head">
+    <div>
+      <h3 class="mono" id="dTitle">—</h3>
+      <div class="dev-sub" id="dSub"></div>
+      <div style="margin-top:8px" id="dBadge"></div>
+    </div>
+    <button class="icon-btn" id="drawerClose" aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="dBody"></div>
+  <div class="drawer-foot" id="dFoot"></div>
+</aside>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/topology.js"></script>
+</body>
+</html>
