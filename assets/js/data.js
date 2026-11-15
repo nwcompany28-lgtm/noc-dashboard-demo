@@ -233,10 +233,10 @@
   // Demo convenience: keep alarm changes while moving between pages (this browser tab only).
   // Remove this block when alarms come from a real API.
   NOC.save = function () {
-    try { sessionStorage.setItem('sb-alarms', JSON.stringify(this.alarms)); } catch (e) { /* ignore */ }
+    try { sessionStorage.setItem('uplink-noc-alarms', JSON.stringify(this.alarms)); } catch (e) { /* ignore */ }
   };
   try {
-    const saved = JSON.parse(sessionStorage.getItem('sb-alarms') || 'null');
+    const saved = JSON.parse(sessionStorage.getItem('uplink-noc-alarms') || 'null');
     if (Array.isArray(saved) && saved.length) NOC.alarms = saved;
   } catch (e) { /* ignore */ }
   (function seedTraffic() {

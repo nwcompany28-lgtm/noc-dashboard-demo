@@ -30,7 +30,7 @@ const App = (function () {
     document.documentElement.setAttribute('data-theme', t);
     const icon = $('themeIcon');
     if (icon) icon.innerHTML = t === 'dark' ? SUN : MOON;
-    try { localStorage.setItem('sb-theme', t); } catch (e) { /* storage unavailable */ }
+    try { localStorage.setItem('uplink-noc-theme', t); } catch (e) { /* storage unavailable */ }
     themeListeners.forEach(fn => fn(t));
   }
 
@@ -78,7 +78,7 @@ const App = (function () {
     tickClock(); setInterval(tickClock, 1000);
 
     let saved = 'dark';
-    try { saved = localStorage.getItem('sb-theme') || 'dark'; } catch (e) { /* ignore */ }
+    try { saved = localStorage.getItem('uplink-noc-theme') || 'dark'; } catch (e) { /* ignore */ }
     applyTheme(saved);
     updateNavCount();
   }
